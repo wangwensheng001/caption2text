@@ -1,3 +1,15 @@
+node -v
+v16.9.1
+
+https://blog.csdn.net/weixin_41003771/article/details/129287025
+
+PostCSS plugin autoprefixer requires PostCSS 8
+
+说明PostCSS 版本不对，需要指定版本执行，执行以下脚本：
+
+cnpm install postcss-loader autoprefixer@8.0.0 postcss  -D
+
+
 # caption2text
 
 > 网页版字幕转文本工具，支持 ass 及 srt 格式批量转换
