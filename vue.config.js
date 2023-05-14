@@ -10,5 +10,6 @@ module.exports = {
     workboxOptions: {
       skipWaiting: true
     }
-  }
+  },
+  parallel: false
 }

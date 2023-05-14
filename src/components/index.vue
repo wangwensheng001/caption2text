@@ -1,13 +1,13 @@
 <template>
   <v-app v-resize="resizeHandler">
-    <v-app-bar app dark color="primary">
+    <!-- <v-app-bar app dark color="primary">
       <v-toolbar-title class="white--text">字幕转换工具</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon dark @click="syncSource" v-text="'<-'" />
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
           <v-btn text dark @click="switchEncoding" v-bind="attrs" v-on="on">
-            {{encoding}}
+            {{ encoding }}
           </v-btn>
         </template>
         <span>编码切换</span>
@@ -15,7 +15,7 @@
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon dark @click="switchFormat" v-bind="attrs" v-on="on">
-            {{files[0].format}}
+            {{ files[0].format }}
           </v-btn>
         </template>
         <span>格式切换</span>
@@ -46,13 +46,16 @@
         </template>
         <span>赞赏</span>
       </v-tooltip>
+      <v-btn icon dark @click="hiddenRawData">
+        {{hiddenRaw?'show':"hide"}}
+      </v-btn>
       <a href="https://github.com/F-loat/caption2text" target="_blank">
         <v-btn icon dark>
           <v-icon>mdi-github</v-icon>
         </v-btn>
       </a>
-    </v-app-bar>
-    <v-main>
+    </v-app-bar> -->
+    <v-main :class="{hide_title:!dialog}">
       <div class="main" @drop.prevent="dropFile">
         <textarea
           ref="source"
@@ -60,6 +63,7 @@
           v-model="files[0].source"
           placeholder="支持多文件拖入"
           spellcheck="false"
+          :class="{ dnone: hiddenRaw }"
           @input="syncResult"
         />
         <textarea
@@ -74,7 +78,16 @@
         <v-icon>mdi-plus</v-icon>
         <input type="file" multiple @input="dropFile" />
       </v-btn>
-      <v-btn color="secondary" dark fixed bottom right fab @click.stop="dialog = true">
+      <v-btn
+        class="export-btn"
+        color="secondary"
+        dark
+        fixed
+        bottom
+        right
+        fab
+        @click.stop="dialog = true"
+      >
         <v-icon>mdi-arrow-down</v-icon>
       </v-btn>
     </v-main>
@@ -88,7 +101,7 @@
             :key="file.name"
             :value="file.name"
             :suffix="`.${outputFormat}`"
-            @blur="e => file.name = e.target.value"
+            @blur="(e) => (file.name = e.target.value)"
           />
           <v-radio-group label="文件格式" v-model="outputFormat" row>
             <v-radio label="Word" value="docx"></v-radio>
@@ -101,14 +114,68 @@
           <v-btn color="primary" text @click.stop="downFile">下载</v-btn>
         </v-card-actions>
       </v-card>
+      <v-app-bar app dark color="primary">
+        <v-toolbar-title class="white--text">字幕转换工具</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon dark @click="syncSource" v-text="'<-'" />
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn text dark @click="switchEncoding" v-bind="attrs" v-on="on">
+              {{ encoding }}
+            </v-btn>
+          </template>
+          <span>编码切换</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon dark @click="switchFormat" v-bind="attrs" v-on="on">
+              {{ files[0].format }}
+            </v-btn>
+          </template>
+          <span>格式切换</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon dark @click="switchInvert" v-bind="attrs" v-on="on">
+              <v-icon>mdi-call-split</v-icon>
+            </v-btn>
+          </template>
+          <span>顺序切换</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon dark @click="switchRange" v-bind="attrs" v-on="on">
+              <v-icon>mdi-google-translate</v-icon>
+            </v-btn>
+          </template>
+          <span>范围切换</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <a href="https://img.alicdn.com/imgextra/i2/O1CN01VhAWVx25SV6pfoc7C_!!6000000007525-0-tps-720-720.jpg" target="_blank" v-bind="attrs" v-on="on">
+              <v-btn icon dark>
+                <v-icon>mdi-arm-flex</v-icon>
+              </v-btn>
+            </a>
+          </template>
+          <span>赞赏</span>
+        </v-tooltip>
+        <v-btn icon dark @click="hiddenRawData">
+          {{hiddenRaw?'show':"hide"}}
+          <!-- <v-icon>mdi-arm-flex</v-icon> -->
+        </v-btn>
+        <!-- <a href="https://github.com/F-loat/caption2text" target="_blank">
+          <v-btn icon dark>
+            <v-icon>mdi-github</v-icon>
+          </v-btn>
+        </a> -->
+      </v-app-bar>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="snackbar.show"
-      bottom
-    >
+    <v-snackbar :timeout="2000" v-model="snackbar.show" bottom>
       {{ snackbar.text }}
-      <v-btn text color="secondary" @click.native="snackbar.show = false">关闭</v-btn>
+      <v-btn text color="secondary" @click.native="snackbar.show = false"
+        >关闭</v-btn
+      >
     </v-snackbar>
   </v-app>
 </template>
@@ -142,6 +209,18 @@ const invertText = (text, invert, range) => {
   return result.join('\n\n')
 }
 
+// const savePosY=()=>{
+// if(state.timer) return;
+// state.timer = setTimeout(() => {
+//   let node = document.querySelector(".contentWrapper")
+//   //记录滚动位置
+//   localStorage.setY = node.scrollTop
+//   // store.commit("setY",node.scrollTop)
+//   // store.commit("setY",node.scrollTop)
+//   state.timer = null;
+//   clearTimeout(state.timer);
+// },100)
+
 export default {
   name: 'Index',
   data () {
@@ -153,6 +232,7 @@ export default {
       encoding: 'utf-8',
       outputFormat: 'docx',
       outputRange: 'all',
+      hiddenRaw: true,
       outputInvert: false,
       files: [{
         format: 'ass',
@@ -173,6 +253,7 @@ export default {
       this.$refs.result.addEventListener('scroll', this.syncScroll)
       /* eslint-disable-next-line no-new */
       new MaterialImage()
+      // contentWrapper.scrollTop = store.state.y;
     })
   },
   methods: {
@@ -229,6 +310,9 @@ export default {
     switchInvert () {
       this.outputInvert = !this.outputInvert
       this.syncResult()
+    },
+    hiddenRawData () {
+      this.hiddenRaw = !this.hiddenRaw
     },
     switchRange () {
       const { outputRange } = this
@@ -357,7 +441,8 @@ export default {
   display: flex;
 }
 
-.source, .result {
+.source,
+.result {
   flex: 1;
   padding: 5px 10px;
   margin: 0;
@@ -369,8 +454,8 @@ export default {
   border: none;
   outline: none;
   resize: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, .1), 0 1px 2px rgba(0, 0, 0, .1);
-  background-color: rgba(255, 255, 255, .9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .file-btn {
@@ -393,5 +478,15 @@ export default {
     right: 16px !important;
     bottom: 48% !important;
   }
+}
+.dnone {
+  display: none;
+}
+
+.file-btn ,.export-btn{
+  opacity: 0.05;
+}
+.hide_title{
+  padding-top: 0 !important;
 }
 </style>
